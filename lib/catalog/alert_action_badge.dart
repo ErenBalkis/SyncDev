@@ -22,7 +22,7 @@ class AlertActionBadge extends StatelessWidget {
       case 'warning': return AppColors.amberFlame;
       case 'success': return AppColors.growthMint;
       case 'danger': return AppColors.crimsonPulse;
-      default: return AppColors.electricBlue;
+      default: return AppColors.solarOrange;
     }
   }
 

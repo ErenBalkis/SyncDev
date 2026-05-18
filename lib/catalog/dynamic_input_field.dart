@@ -4,11 +4,10 @@ import 'package:onyxfi_frontend/core/theme/app_theme.dart';
 import 'package:onyxfi_frontend/widgets/glass_container.dart';
 
 /// ──────────────────────────────────────────────────────────
-/// OnyxFi — Dynamic Input Field (Midnight Ledger Dark Theme)
+/// OnyxFi — Dynamic Input Field (Ambient Transparent Glass)
 /// ──────────────────────────────────────────────────────────
 /// GenUI catalog component for numeric/text input.
-/// Now a StatefulWidget with a submit button that fires the
-/// entered value back to the AI via the `onSubmit` callback.
+/// Solar Orange cursor and submit button accent.
 /// ──────────────────────────────────────────────────────────
 
 class DynamicInputField extends StatefulWidget {
@@ -19,8 +18,6 @@ class DynamicInputField extends StatefulWidget {
   final ValueChanged<String>? onChanged;
 
   /// Callback invoked when the user taps the submit button.
-  /// Sends a formatted string like "Aylık maaşım 15000 TL"
-  /// back to the AI chat flow via the ComponentRegistry bridge.
   final Function(String)? onSubmit;
 
   const DynamicInputField({
@@ -63,7 +60,6 @@ class _DynamicInputFieldState extends State<DynamicInputField> {
   void _handleSubmit() {
     final value = _controller.text.trim();
     if (value.isEmpty || widget.onSubmit == null) return;
-
     final suffix = widget.suffix ?? '';
     final message = '${widget.label}: $value $suffix'.trim();
     widget.onSubmit!(message);
@@ -101,10 +97,14 @@ class _DynamicInputFieldState extends State<DynamicInputField> {
                   },
                   onSubmitted: (_) => _handleSubmit(),
                   style: AppTheme.heading.copyWith(fontSize: 28, color: AppColors.snowWhite),
-                  cursorColor: AppColors.electricBlue,
+                  // Solar Orange cursor
+                  cursorColor: AppColors.solarOrange,
                   decoration: InputDecoration(
                     hintText: widget.hint,
-                    hintStyle: AppTheme.heading.copyWith(fontSize: 28, color: AppColors.stoneGrey),
+                    hintStyle: AppTheme.heading.copyWith(
+                      fontSize: 28,
+                      color: AppColors.stoneGrey,
+                    ),
                     suffixText: widget.suffix,
                     suffixStyle: AppTheme.subheading.copyWith(color: AppColors.stoneGrey),
                     border: InputBorder.none,
@@ -115,7 +115,7 @@ class _DynamicInputFieldState extends State<DynamicInputField> {
                 ),
               ),
 
-              // Submit button — appears when user types a value
+              // Submit button — Solar Orange
               if (widget.onSubmit != null)
                 AnimatedOpacity(
                   opacity: _hasValue ? 1.0 : 0.3,
@@ -126,18 +126,10 @@ class _DynamicInputFieldState extends State<DynamicInputField> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        gradient: _hasValue ? AppColors.electricGradient : null,
+                        gradient: _hasValue ? AppColors.orangeGradient : null,
                         color: _hasValue ? null : AppColors.deepSlate,
                         borderRadius: BorderRadius.circular(12),
-                        boxShadow: _hasValue
-                            ? [
-                                BoxShadow(
-                                  color: AppColors.electricBlue.withValues(alpha: 0.3),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ]
-                            : [],
+                        boxShadow: _hasValue ? [AppColors.orangeGlowSubtle] : [],
                       ),
                       child: const Icon(
                         Icons.send_rounded,

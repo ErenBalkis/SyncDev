@@ -11,12 +11,13 @@ import 'package:onyxfi_frontend/widgets/glass_container.dart';
 import 'package:onyxfi_frontend/widgets/chat_bubble.dart';
 
 /// ──────────────────────────────────────────────────────────
-/// OnyxFi — Dashboard / GenUI Chat View (Midnight Ledger)
+/// OnyxFi — Dashboard / GenUI Chat View
 /// ──────────────────────────────────────────────────────────
-/// The main view combining a financial dashboard with an
-/// AI-powered GenUI chat interface. Renders dynamic widgets
-/// inline with conversation, and threads user interactions
-/// from GenUI widgets back to the AI via callbacks.
+/// Ambient Transparent Glass aesthetic:
+///   Layer 0 — Dynamic background image (Black & Orange abstract)
+///   Layer 1 — Legibility overlay (dark, moderate opacity)
+///   Layer 2 — Ambient Solar Orange glow accents
+///   Layer 3 — SafeArea with transparent glass UI
 /// ──────────────────────────────────────────────────────────
 
 class DashboardView extends StatefulWidget {
@@ -43,7 +44,6 @@ class _DashboardViewState extends State<DashboardView>
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
 
-    // Task 2: Auto-start the AI conversation with goal_selection
     _greet();
   }
 
@@ -57,8 +57,6 @@ class _DashboardViewState extends State<DashboardView>
   }
 
   // ── Auto-Greeting ──────────────────────────────────────
-  /// Sends an invisible initial prompt to Gemini so the user
-  /// immediately sees a GenUI card (goal_selection) on launch.
   Future<void> _greet() async {
     setState(() => _loading = true);
     try {
@@ -95,21 +93,14 @@ class _DashboardViewState extends State<DashboardView>
   }
 
   // ── Send from GenUI Widget Callback ────────────────────
-  /// Called by interactive GenUI widgets (GoalSelectionCard,
-  /// DynamicInputField) when the user confirms a selection.
-  /// Also persists the data into the OnboardingStateNotifier.
   Future<void> _sendFromWidget(String message) async {
     if (_loading) return;
-
-    // Persist to Provider state
     _persistToState(message);
-
     await _sendToAI(message);
   }
 
   // ── Core AI Communication ─────────────────────────────
   Future<void> _sendToAI(String userMessage) async {
-    // Add user message bubble
     setState(() {
       _messages.add(ChatMessage.user(userMessage));
       _loading = true;
@@ -142,7 +133,6 @@ class _DashboardViewState extends State<DashboardView>
     final state = context.read<OnboardingStateNotifier>();
     final lower = message.toLowerCase();
 
-    // Detect goal selections
     if (lower.contains('hedef')) {
       final goalIds = <String>[];
       if (lower.contains('ev') || lower.contains('home') || lower.contains('house')) goalIds.add('home');
@@ -157,7 +147,6 @@ class _DashboardViewState extends State<DashboardView>
       }
     }
 
-    // Detect numeric values (salary, expenses, savings)
     final numbers = RegExp(r'[\d]+\.?[\d]*').allMatches(message);
     if (numbers.isNotEmpty) {
       final value = double.tryParse(numbers.first.group(0) ?? '');
@@ -197,57 +186,67 @@ class _DashboardViewState extends State<DashboardView>
     return Scaffold(
       body: Stack(
         children: [
-          // Layer 0: Background Image (background_dark.jpg)
+          // ── Layer 0: Dynamic Background Image ──────────
+          // Remains fully intact for dynamic background switching.
           Positioned.fill(
             child: Image.asset(
               bgImage,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (context, e, stackTrace) => Container(
+                // Fallback: near-black with warm orange undertone
                 decoration: const BoxDecoration(gradient: AppColors.midnightGradient),
               ),
             ),
           ),
-          // Layer 1: Dark legibility mask overlay
+
+          // ── Layer 1: Legibility Overlay ────────────────
+          // Moderate dark overlay — lets abstract background show through
+          // the transparent glass, while keeping text legible.
           Positioned.fill(
             child: Container(
+              color: AppColors.legibilityOverlay, // black @ 40%
+            ),
+          ),
+
+          // ── Layer 2: Ambient Solar Orange Glows ────────
+          // Top-right glow
+          Positioned(
+            top: -120,
+            right: -120,
+            child: Container(
+              width: 500,
+              height: 500,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
                   colors: [
-                    AppColors.midnightInk.withValues(alpha: 0.85),
-                    AppColors.midnightInk.withValues(alpha: 0.95),
+                    AppColors.solarOrange.withValues(alpha: 0.20),
+                    Colors.transparent,
                   ],
                 ),
               ),
             ),
           ),
-          // Layer 2: Ambient glows
+          // Bottom-left glow
           Positioned(
-            top: -100, right: -100,
+            bottom: -150,
+            left: -100,
             child: Container(
-              width: 400, height: 400,
+              width: 500,
+              height: 500,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [AppColors.electricBlue.withValues(alpha: 0.08), Colors.transparent],
+                  colors: [
+                    const Color(0xFFFF4500).withValues(alpha: 0.12),
+                    Colors.transparent,
+                  ],
                 ),
               ),
             ),
           ),
-          Positioned(
-            bottom: -150, left: -100,
-            child: Container(
-              width: 500, height: 500,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [AppColors.growthMint.withValues(alpha: 0.05), Colors.transparent],
-                ),
-              ),
-            ),
-          ),
-          // Layer 3: UI Content
+
+          // ── Layer 3: UI Content ─────────────────────────
           SafeArea(
             child: wide
                 ? Row(children: [_sidebar(), Expanded(child: _main())])
@@ -269,13 +268,14 @@ class _DashboardViewState extends State<DashboardView>
         width: 220,
         padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
         child: Column(children: [
-          // Logo
+          // Logo — Solar Orange
           Container(
-            width: 56, height: 56,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
-              gradient: AppColors.electricGradient,
+              gradient: AppColors.orangeGradient,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [AppColors.electricGlow],
+              boxShadow: [AppColors.orangeGlow],
             ),
             child: const Icon(Icons.auto_awesome, color: AppColors.solidWhite, size: 28),
           ),
@@ -297,17 +297,23 @@ class _DashboardViewState extends State<DashboardView>
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: a ? AppColors.electricBlueActive : Colors.transparent,
+                    color: a ? AppColors.solarOrangeActive : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
-                    border: a ? Border.all(color: AppColors.electricBlue.withValues(alpha: 0.2)) : null,
+                    border: a
+                        ? Border.all(color: AppColors.solarOrange.withValues(alpha: 0.30))
+                        : null,
                   ),
                   child: Row(children: [
-                    Icon(icons[i], color: a ? AppColors.electricBlue : AppColors.stoneGrey, size: 20),
+                    Icon(
+                      icons[i],
+                      color: a ? AppColors.solarOrange : AppColors.stoneGrey,
+                      size: 20,
+                    ),
                     const SizedBox(width: 12),
                     Text(
                       labels[i],
                       style: AppTheme.bodySm.copyWith(
-                        color: a ? AppColors.electricBlue : AppColors.stoneGrey,
+                        color: a ? AppColors.solarOrange : AppColors.stoneGrey,
                         fontWeight: a ? FontWeight.w600 : FontWeight.w400,
                       ),
                     ),
@@ -319,23 +325,33 @@ class _DashboardViewState extends State<DashboardView>
 
           const Spacer(),
 
-          // AI status
+          // AI status indicator — Solar Orange pulse
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.growthMint.withValues(alpha: 0.1),
+              color: AppColors.solarOrange.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: AppColors.growthMint.withValues(alpha: 0.2)),
+              border: Border.all(color: AppColors.solarOrange.withValues(alpha: 0.25)),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Container(
-                width: 8, height: 8,
-                decoration: const BoxDecoration(color: AppColors.growthMint, shape: BoxShape.circle),
+              AnimatedBuilder(
+                animation: _pulse,
+                builder: (context, child) => Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: AppColors.solarOrange.withValues(alpha: 0.6 + _pulse.value * 0.4),
+                    shape: BoxShape.circle,
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               Text(
                 'AI Aktif',
-                style: AppTheme.caption.copyWith(color: AppColors.growthMint, fontWeight: FontWeight.w500),
+                style: AppTheme.caption.copyWith(
+                  color: AppColors.solarOrange,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ]),
           ),
@@ -352,10 +368,16 @@ class _DashboardViewState extends State<DashboardView>
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(3, (i) => IconButton(
-          onPressed: () => setState(() => _navIdx = i),
-          icon: Icon(icons[i], color: _navIdx == i ? AppColors.electricBlue : AppColors.stoneGrey),
-        )),
+        children: List.generate(
+          3,
+          (i) => IconButton(
+            onPressed: () => setState(() => _navIdx = i),
+            icon: Icon(
+              icons[i],
+              color: _navIdx == i ? AppColors.solarOrange : AppColors.stoneGrey,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -382,7 +404,7 @@ class _DashboardViewState extends State<DashboardView>
             GlassContainer(
               padding: const EdgeInsets.all(10),
               borderRadius: 12,
-              child: const Icon(Icons.notifications_outlined, color: AppColors.silverMist, size: 22),
+              child: Icon(Icons.notifications_outlined, color: AppColors.stoneGrey, size: 22),
             ),
           ]),
           const SizedBox(height: 16),
@@ -424,11 +446,14 @@ class _DashboardViewState extends State<DashboardView>
         border: Border(bottom: BorderSide(color: AppColors.frostBorder)),
       ),
       child: Row(children: [
+        // AI Avatar — Solar Orange
         Container(
-          width: 36, height: 36,
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
-            gradient: AppColors.electricGradient,
+            gradient: AppColors.orangeGradient,
             borderRadius: BorderRadius.circular(10),
+            boxShadow: [AppColors.orangeGlowSubtle],
           ),
           child: const Icon(Icons.auto_awesome, color: AppColors.solidWhite, size: 18),
         ),
@@ -436,11 +461,27 @@ class _DashboardViewState extends State<DashboardView>
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('OnyxFi AI', style: AppTheme.bodySm.copyWith(fontWeight: FontWeight.w600, color: AppColors.snowWhite)),
+            Text(
+              'OnyxFi AI',
+              style: AppTheme.bodySm.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.snowWhite,
+              ),
+            ),
             Row(children: [
-              Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.growthMint, shape: BoxShape.circle)),
+              Container(
+                width: 6,
+                height: 6,
+                decoration: const BoxDecoration(
+                  color: AppColors.growthMint,
+                  shape: BoxShape.circle,
+                ),
+              ),
               const SizedBox(width: 4),
-              Text('Aktif', style: AppTheme.caption.copyWith(color: AppColors.growthMint, fontSize: 11)),
+              Text(
+                'Aktif',
+                style: AppTheme.caption.copyWith(color: AppColors.growthMint, fontSize: 11),
+              ),
             ]),
           ],
         ),
@@ -452,7 +493,7 @@ class _DashboardViewState extends State<DashboardView>
             setState(() => _messages.clear());
             _greet();
           },
-          icon: const Icon(Icons.refresh_rounded, color: AppColors.stoneGrey, size: 20),
+          icon: Icon(Icons.refresh_rounded, color: AppColors.stoneGrey, size: 20),
           tooltip: 'Sohbeti Sıfırla',
         ),
       ]),
@@ -468,10 +509,7 @@ class _DashboardViewState extends State<DashboardView>
             ? CrossAxisAlignment.end
             : CrossAxisAlignment.start,
         children: [
-          // Text bubble
           ChatBubble(message: m),
-
-          // GenUI widget — pass _sendFromWidget as the callback
           if (m.hasGenUI) ...[
             const SizedBox(height: 8),
             Padding(
@@ -496,14 +534,17 @@ class _DashboardViewState extends State<DashboardView>
           AnimatedBuilder(
             animation: _pulse,
             builder: (_, child) => Container(
-              width: 80, height: 80,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
-                gradient: AppColors.electricGradient,
+                gradient: AppColors.orangeGradient,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.electricBlue.withValues(alpha: 0.2 + (_pulse.value * 0.15)),
-                    blurRadius: 24 + (_pulse.value * 12),
+                    color: AppColors.solarOrange.withValues(
+                      alpha: 0.25 + (_pulse.value * 0.20),
+                    ),
+                    blurRadius: 28 + (_pulse.value * 14),
                     offset: const Offset(0, 8),
                   ),
                 ],
@@ -534,21 +575,25 @@ class _DashboardViewState extends State<DashboardView>
         margin: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           mainAxisSize: MainAxisSize.min,
-          children: List.generate(3, (i) => Padding(
-            padding: EdgeInsets.only(left: i > 0 ? 4 : 0),
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.3, end: 1.0),
-              duration: Duration(milliseconds: 600 + (i * 200)),
-              curve: Curves.easeInOut,
-              builder: (_, v, child) => Container(
-                width: 8, height: 8,
-                decoration: BoxDecoration(
-                  color: AppColors.electricBlue.withValues(alpha: v),
-                  shape: BoxShape.circle,
+          children: List.generate(
+            3,
+            (i) => Padding(
+              padding: EdgeInsets.only(left: i > 0 ? 4 : 0),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.3, end: 1.0),
+                duration: Duration(milliseconds: 600 + (i * 200)),
+                curve: Curves.easeInOut,
+                builder: (_, v, child) => Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: AppColors.solarOrange.withValues(alpha: v),
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
             ),
-          )),
+          ),
         ),
       ),
     );
@@ -587,18 +632,26 @@ class _DashboardViewState extends State<DashboardView>
           ),
         ),
         const SizedBox(width: 12),
+        // Send button — Solar Orange
         GestureDetector(
           onTap: _loading ? null : _send,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            width: 48, height: 48,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              gradient: _loading ? null : AppColors.electricGradient,
+              gradient: _loading ? null : AppColors.orangeGradient,
               color: _loading ? AppColors.deepSlate : null,
               borderRadius: BorderRadius.circular(14),
               boxShadow: _loading
                   ? []
-                  : [BoxShadow(color: AppColors.electricBlue.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))],
+                  : [
+                      BoxShadow(
+                        color: AppColors.solarOrange.withValues(alpha: 0.35),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      )
+                    ],
             ),
             child: Icon(
               _loading ? Icons.hourglass_top_rounded : Icons.send_rounded,

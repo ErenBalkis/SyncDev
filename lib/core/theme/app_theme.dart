@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:onyxfi_frontend/core/constants/colors.dart';
 
 /// ──────────────────────────────────────────────────────────
-/// OnyxFi — Midnight Ledger Theme
+/// OnyxFi — Ambient Transparent Glass Theme
 /// ──────────────────────────────────────────────────────────
-/// Full ThemeData implementation for the High-Contrast Dark
-/// Glassmorphism design system.
+/// Full ThemeData implementation for the Ambient Transparent
+/// Glass design system. Dark background, Solar Orange accents,
+/// highly transparent glass cards, white typography.
 ///
 /// Typography Scale:
 ///   caption    : 12px / 1.5  / -0.007px
@@ -36,11 +37,13 @@ class AppTheme {
   static const double sidebarRadius = 24.0;
 
   // ── Blur Values ────────────────────────────────────────
-  static const double blurMedium = 16.0;
+  static const double blurMedium = 20.0;
   static const double blurHeavy = 24.0;
 
-  // ── Custom Text Styles (Midnight Ledger Type Scale) ────
-  static const TextStyle caption = TextStyle(
+  // ── Custom Text Styles (Ambient Glass Type Scale) ──────
+  // All text is white-based for legibility over the dark B&O background.
+
+  static TextStyle get caption => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 12,
     height: 1.5,
@@ -49,7 +52,7 @@ class AppTheme {
     color: AppColors.stoneGrey,
   );
 
-  static const TextStyle bodySm = TextStyle(
+  static TextStyle get bodySm => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 14,
     height: 1.43,
@@ -58,7 +61,7 @@ class AppTheme {
     color: AppColors.silverMist,
   );
 
-  static const TextStyle body = TextStyle(
+  static TextStyle get body => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 16,
     height: 1.38,
@@ -114,8 +117,8 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.midnightInk,
 
       // ── Color Scheme ────────────────────────────────
-      colorScheme: const ColorScheme.dark(
-        primary: AppColors.electricBlue,
+      colorScheme: ColorScheme.dark(
+        primary: AppColors.solarOrange,
         onPrimary: AppColors.solidWhite,
         secondary: AppColors.growthMint,
         onSecondary: AppColors.solidWhite,
@@ -126,7 +129,7 @@ class AppTheme {
       ),
 
       // ── AppBar ──────────────────────────────────────
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.snowWhite,
@@ -141,7 +144,7 @@ class AppTheme {
       ),
 
       // ── Text Theme ─────────────────────────────────
-      textTheme: const TextTheme(
+      textTheme: TextTheme(
         displayLarge: heading,
         displayMedium: TextStyle(
           fontFamily: _fontFamily,
@@ -171,10 +174,38 @@ class AppTheme {
           fontWeight: FontWeight.w500,
           color: AppColors.snowWhite,
         ),
-        titleSmall: bodySm,
-        bodyLarge: body,
-        bodyMedium: bodySm,
-        bodySmall: caption,
+        titleSmall: TextStyle(
+          fontFamily: _fontFamily,
+          fontSize: 14,
+          height: 1.43,
+          letterSpacing: -0.013,
+          fontWeight: FontWeight.w400,
+          color: AppColors.silverMist,
+        ),
+        bodyLarge: TextStyle(
+          fontFamily: _fontFamily,
+          fontSize: 16,
+          height: 1.38,
+          letterSpacing: -0.02,
+          fontWeight: FontWeight.w400,
+          color: AppColors.silverMist,
+        ),
+        bodyMedium: TextStyle(
+          fontFamily: _fontFamily,
+          fontSize: 14,
+          height: 1.43,
+          letterSpacing: -0.013,
+          fontWeight: FontWeight.w400,
+          color: AppColors.silverMist,
+        ),
+        bodySmall: TextStyle(
+          fontFamily: _fontFamily,
+          fontSize: 12,
+          height: 1.5,
+          letterSpacing: -0.007,
+          fontWeight: FontWeight.w400,
+          color: AppColors.stoneGrey,
+        ),
         labelLarge: buttonLabel,
         labelMedium: TextStyle(
           fontFamily: _fontFamily,
@@ -184,13 +215,20 @@ class AppTheme {
           fontWeight: FontWeight.w500,
           color: AppColors.snowWhite,
         ),
-        labelSmall: caption,
+        labelSmall: TextStyle(
+          fontFamily: _fontFamily,
+          fontSize: 12,
+          height: 1.5,
+          letterSpacing: -0.007,
+          fontWeight: FontWeight.w400,
+          color: AppColors.stoneGrey,
+        ),
       ),
 
-      // ── Elevated Button ─────────────────────────────
+      // ── Elevated Button — Solar Orange Solid ─────────
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.electricBlue,
+          backgroundColor: AppColors.solarOrange,
           foregroundColor: AppColors.solidWhite,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
@@ -217,7 +255,7 @@ class AppTheme {
       // ── Text Button ────────────────────────────────
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.electricBlue,
+          foregroundColor: AppColors.solarOrange,
           textStyle: const TextStyle(
             fontFamily: _fontFamily,
             fontSize: 14,
@@ -230,7 +268,11 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.glassLight,
-        hintStyle: bodySm.copyWith(color: AppColors.stoneGrey),
+        hintStyle: TextStyle(
+          fontFamily: _fontFamily,
+          fontSize: 14,
+          color: AppColors.stoneGrey,
+        ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(pillRadius),
@@ -242,7 +284,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(pillRadius),
-          borderSide: const BorderSide(color: AppColors.electricBlue, width: 2),
+          borderSide: const BorderSide(color: AppColors.solarOrange, width: 2),
         ),
       ),
 
@@ -252,13 +294,13 @@ class AppTheme {
         color: AppColors.glassHeavy,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(cardRadius),
-          side: BorderSide(color: AppColors.frostBorder, width: 1.5),
+          side: BorderSide(color: AppColors.frostBorder, width: 1.0),
         ),
         margin: const EdgeInsets.all(0),
       ),
 
       // ── Icon ────────────────────────────────────────
-      iconTheme: const IconThemeData(
+      iconTheme: IconThemeData(
         color: AppColors.stoneGrey,
         size: 24,
       ),
@@ -274,7 +316,7 @@ class AppTheme {
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        selectedItemColor: AppColors.electricBlue,
+        selectedItemColor: AppColors.solarOrange,
         unselectedItemColor: AppColors.stoneGrey,
         selectedLabelStyle: const TextStyle(
           fontFamily: _fontFamily,

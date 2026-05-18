@@ -5,11 +5,10 @@ import 'package:onyxfi_frontend/core/theme/app_theme.dart';
 import 'package:onyxfi_frontend/widgets/glass_container.dart';
 
 /// ──────────────────────────────────────────────────────────
-/// OnyxFi — Goal Selection Card (Midnight Ledger Dark Theme)
+/// OnyxFi — Goal Selection Card (Ambient Transparent Glass)
 /// ──────────────────────────────────────────────────────────
 /// GenUI catalog component for financial goal selection.
-/// Supports an `onSubmit` callback that fires a formatted
-/// message back to the AI when the user confirms their goals.
+/// Solar Orange accent for selected states and confirm button.
 /// ──────────────────────────────────────────────────────────
 
 class GoalSelectionCard extends StatefulWidget {
@@ -19,8 +18,6 @@ class GoalSelectionCard extends StatefulWidget {
   final ValueChanged<List<String>>? onSelectionChanged;
 
   /// Callback invoked when the user confirms their selection.
-  /// Sends a formatted string like "Ev, Araba hedeflerini seçtim"
-  /// back to the AI chat flow via the ComponentRegistry bridge.
   final Function(String)? onSubmit;
 
   const GoalSelectionCard({
@@ -37,7 +34,6 @@ class GoalSelectionCard extends StatefulWidget {
     Function(String)? onSubmit,
   }) {
     final goalsRaw = json['goals'] as List<dynamic>? ?? [];
-    // Also handle "options" key from Gemini's response format
     final optionsRaw = json['options'] as List<dynamic>?;
 
     List<GoalOption> parsedGoals;
@@ -66,7 +62,6 @@ class GoalSelectionCard extends StatefulWidget {
     );
   }
 
-  /// Maps common goal strings to emojis for the "options" format.
   static String _emojiForGoal(String label) {
     final l = label.toLowerCase();
     if (l.contains('house') || l.contains('ev') || l.contains('home')) return '🏠';
@@ -117,13 +112,10 @@ class _GoalSelectionCardState extends State<GoalSelectionCard>
 
   void _confirmSelection() {
     if (_selectedIds.isEmpty || widget.onSubmit == null) return;
-
-    // Build a human-readable message from the selected goal labels
     final selectedLabels = widget.goals
         .where((g) => _selectedIds.contains(g.id))
         .map((g) => g.label)
         .toList();
-
     final message = '${selectedLabels.join(", ")} hedeflerini seçtim.';
     widget.onSubmit!(message);
   }
@@ -137,25 +129,28 @@ class _GoalSelectionCardState extends State<GoalSelectionCard>
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header
+          // Header — Solar Orange icon
           Row(children: [
             Container(
-              width: 40, height: 40,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: AppColors.electricBlue.withValues(alpha: 0.15),
+                color: AppColors.solarOrange.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.flag_rounded, color: AppColors.electricBlue, size: 22),
+              child: const Icon(Icons.flag_rounded, color: AppColors.solarOrange, size: 22),
             ),
             const SizedBox(width: 14),
-            Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(widget.title, style: AppTheme.subheading),
-                const SizedBox(height: 2),
-                Text(widget.subtitle, style: AppTheme.caption),
-              ],
-            )),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.title, style: AppTheme.subheading),
+                  const SizedBox(height: 2),
+                  Text(widget.subtitle, style: AppTheme.caption),
+                ],
+              ),
+            ),
           ]),
 
           const SizedBox(height: 28),
@@ -173,12 +168,12 @@ class _GoalSelectionCardState extends State<GoalSelectionCard>
                 .toList(),
           ),
 
-          // Selection counter + Confirm button
+          // Counter + Confirm — Solar Orange
           if (_selectedIds.isNotEmpty) ...[
             const SizedBox(height: 24),
             Row(
               children: [
-                // Shimmer counter badge
+                // Shimmer counter badge — Solar Orange
                 AnimatedBuilder(
                   animation: _shimmerController,
                   builder: (_, child) => Container(
@@ -186,22 +181,24 @@ class _GoalSelectionCardState extends State<GoalSelectionCard>
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          AppColors.electricBlue.withValues(alpha: 0.08),
-                          AppColors.electricBlue.withValues(alpha: 0.18),
-                          AppColors.electricBlue.withValues(alpha: 0.08),
+                          AppColors.solarOrange.withValues(alpha: 0.08),
+                          AppColors.solarOrange.withValues(alpha: 0.20),
+                          AppColors.solarOrange.withValues(alpha: 0.08),
                         ],
                         stops: [0.0, _shimmerController.value, 1.0],
                       ),
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: AppColors.electricBlue.withValues(alpha: 0.25)),
+                      border: Border.all(
+                        color: AppColors.solarOrange.withValues(alpha: 0.30),
+                      ),
                     ),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.check_circle, color: AppColors.electricBlue, size: 16),
+                      const Icon(Icons.check_circle, color: AppColors.solarOrange, size: 16),
                       const SizedBox(width: 8),
                       Text(
                         '${_selectedIds.length} hedef seçildi',
                         style: AppTheme.bodySm.copyWith(
-                          color: AppColors.electricBlue,
+                          color: AppColors.solarOrange,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -211,22 +208,16 @@ class _GoalSelectionCardState extends State<GoalSelectionCard>
 
                 const Spacer(),
 
-                // Confirm button — sends selection back to AI
+                // Confirm button — Solar Orange solid
                 if (widget.onSubmit != null)
                   GestureDetector(
                     onTap: _confirmSelection,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       decoration: BoxDecoration(
-                        gradient: AppColors.electricGradient,
+                        gradient: AppColors.orangeGradient,
                         borderRadius: BorderRadius.circular(999),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.electricBlue.withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                        boxShadow: [AppColors.orangeGlowSubtle],
                       ),
                       child: Row(mainAxisSize: MainAxisSize.min, children: [
                         const Icon(Icons.send_rounded, color: AppColors.solidWhite, size: 16),
@@ -314,20 +305,21 @@ class _GoalChipState extends State<_GoalChip>
                 width: 100,
                 height: 110,
                 decoration: BoxDecoration(
+                  // Solar Orange fill when selected, transparent glass when not
                   color: sel
-                      ? AppColors.electricBlue.withValues(alpha: 0.15)
+                      ? AppColors.solarOrange.withValues(alpha: 0.15)
                       : Colors.white.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: sel
-                        ? AppColors.electricBlue.withValues(alpha: 0.5)
+                        ? AppColors.solarOrange.withValues(alpha: 0.55)
                         : AppColors.frostBorder,
                     width: sel ? 2.0 : 1.0,
                   ),
                   boxShadow: sel
                       ? [
                           BoxShadow(
-                            color: AppColors.electricBlue.withValues(alpha: 0.2),
+                            color: AppColors.solarOrange.withValues(alpha: 0.25),
                             blurRadius: 20,
                             offset: const Offset(0, 4),
                           )
@@ -342,7 +334,7 @@ class _GoalChipState extends State<_GoalChip>
                     Text(
                       widget.goal.label,
                       style: AppTheme.bodySm.copyWith(
-                        color: sel ? AppColors.electricBlue : AppColors.silverMist,
+                        color: sel ? AppColors.solarOrange : AppColors.silverMist,
                         fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
                       ),
                       textAlign: TextAlign.center,
@@ -355,7 +347,7 @@ class _GoalChipState extends State<_GoalChip>
                         width: 18,
                         height: 18,
                         decoration: const BoxDecoration(
-                          color: AppColors.electricBlue,
+                          color: AppColors.solarOrange,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.check, color: AppColors.solidWhite, size: 12),

@@ -5,10 +5,11 @@ import 'package:onyxfi_frontend/models/chat_message.model.dart';
 import 'package:onyxfi_frontend/widgets/glass_container.dart';
 
 /// ──────────────────────────────────────────────────────────
-/// OnyxFi — Chat Bubble (Midnight Ledger Dark Theme)
+/// OnyxFi — Chat Bubble (Ambient Transparent Glass)
 /// ──────────────────────────────────────────────────────────
-/// Renders user messages on the right (Electric Blue glow),
-/// AI messages on the left (subtle frost glass).
+/// User messages — right-aligned, Solar Orange frost border + glow.
+/// AI messages — left-aligned, white frost glass, no accent glow.
+/// All text is white-based for legibility on dark background.
 /// ──────────────────────────────────────────────────────────
 class ChatBubble extends StatelessWidget {
   final ChatMessage message;
@@ -29,14 +30,14 @@ class ChatBubble extends StatelessWidget {
           opacity: _isUser ? 0.10 : 0.05,
           borderRadius: 16,
           borderColor: _isUser
-              ? AppColors.electricBlue.withValues(alpha: 0.35)
+              ? AppColors.solarOrange.withValues(alpha: 0.40)
               : AppColors.frostBorder,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           margin: const EdgeInsets.symmetric(vertical: 4),
           glowShadows: _isUser
               ? [
                   BoxShadow(
-                    color: AppColors.electricBlue.withValues(alpha: 0.12),
+                    color: AppColors.solarOrange.withValues(alpha: 0.15),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
                   ),

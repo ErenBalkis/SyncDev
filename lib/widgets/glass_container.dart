@@ -4,10 +4,12 @@ import 'package:onyxfi_frontend/core/constants/colors.dart';
 import 'package:onyxfi_frontend/core/theme/app_theme.dart';
 
 /// ──────────────────────────────────────────────────────────
-/// OnyxFi — Dark Glassmorphism Container
+/// OnyxFi — Ambient Transparent Glass Container
 /// ──────────────────────────────────────────────────────────
 /// Reusable glass panel: ClipRRect → BackdropFilter → Container
-/// with low-opacity dark/white fills and subtle glowing borders.
+/// with highly transparent white fills (0.05–0.10) and a
+/// prominent frost border (0.20 white opacity) that defines
+/// the glass edge over the dark Black & Orange background.
 /// ──────────────────────────────────────────────────────────
 class GlassContainer extends StatelessWidget {
   final Widget child;
@@ -26,7 +28,7 @@ class GlassContainer extends StatelessWidget {
     super.key,
     required this.child,
     this.blurSigma = AppTheme.blurMedium,
-    this.opacity = 0.06,
+    this.opacity = 0.05,
     this.borderRadius = AppTheme.cardRadius,
     this.padding,
     this.margin,
@@ -37,7 +39,7 @@ class GlassContainer extends StatelessWidget {
     this.glowShadows,
   });
 
-  /// Heavy variant for sidebars and modals — higher opacity, more blur.
+  /// Heavy variant for sidebars and modals — slightly higher opacity, max blur.
   factory GlassContainer.heavy({
     required Widget child,
     EdgeInsetsGeometry? padding,
@@ -74,7 +76,7 @@ class GlassContainer extends StatelessWidget {
           child: Container(
             padding: padding ?? const EdgeInsets.all(AppTheme.cardPadding),
             decoration: BoxDecoration(
-              // Dark glass fill with subtle white tint
+              // Highly transparent fill — lets Black/Orange bg show through
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -85,6 +87,7 @@ class GlassContainer extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(borderRadius),
               border: Border.all(
+                // Prominent frost border defines the glass edge on dark background
                 color: borderColor ?? AppColors.frostBorder,
                 width: borderWidth,
               ),
