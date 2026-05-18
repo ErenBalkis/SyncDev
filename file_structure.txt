@@ -1,0 +1,39 @@
+onyxfi_frontend/
+│
+├── .agent/
+│   └── rules/
+│       ├── frontend.md          <-- Ajanın Flutter ve GenUI kuralları
+│       └── design_system.md     <-- Ajanın renk, font ve cam efekti kuralları
+│
+├── lib/
+│   ├── main.dart                <-- Uygulama giriş noktası
+│   │
+│   ├── core/                    <-- Evrensel sabitler ve ağ yapılandırması
+│   │   ├── constants/
+│   │   │   └── colors.dart      <-- DESIGN.md renk token'larının Flutter karşılıkları
+│   │   ├── network/
+│   │   │   └── gemini_client.dart <-- Gemini API entegrasyonu ve JSON ayrıştırıcı
+│   │   └── theme/
+│   │       └── app_theme.dart   <-- Temel karanlık mod teması ve Inter yazı fontu ayarlamaları
+│   │
+│   ├── models/                  <-- Veri modelleri ve durum yönetimi
+│   │   ├── chat_message.model.dart
+│   │   └── onboarding_state.dart
+│   │
+│   ├── widgets/                 <-- Statik ve küresel bileşenler
+│   │   ├── glass_container.dart <-- Her yerde kullanacağınız cam efekti (BackdropFilter) widget'ı
+│   │   └── chat_bubble.dart
+│   │
+│   ├── views/                   <-- Ana ekranlar
+│   │   ├── onboarding_view.dart <-- İlk tanışma ve akıllı soru-cevap ekranı
+│   │   └── dashboard_view.dart  <-- Kapsamlı ana finans paneli ve entegre chat
+│   │
+│   └── catalog/                 <-- CRITICAL: GEN-UI AJANININ ÇAĞIRACAĞI BİLEŞENLER
+│       ├── component_registry.dart <-- Gelen JSON tipine göre doğru widget'ı seçen köprü
+│       ├── goal_selection_card.dart <-- Ev/Araba/Emeklilik seçim kartı (Onboarding için)
+│       ├── dynamic_input_field.dart <-- Maaş/Gider girişi için özelleştirilmiş pill input
+│       ├── financial_projection_chart.dart <-- fl_chart kullanan dinamik çizgi/pasta grafik
+│       └── alert_action_badge.dart  <-- Risk ve fırsatları gösteren buton bileşenleri
+│
+├── .env                         <-- Gemini API Anahtarınız (AI Studio'dan alınan)
+└── pubspec.yaml                 <-- google_generative_ai ve fl_chart paketlerinin olduğu yer
