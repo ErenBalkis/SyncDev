@@ -11,6 +11,7 @@ import 'package:onyxfi_frontend/models/chat_message.model.dart';
 import 'package:onyxfi_frontend/models/onboarding_state.dart';
 import 'package:onyxfi_frontend/widgets/glass_container.dart';
 import 'package:onyxfi_frontend/widgets/chat_bubble.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 /// ──────────────────────────────────────────────────────────
 /// OnyxFi — Dashboard / GenUI Chat View
@@ -382,59 +383,405 @@ class _DashboardViewState extends State<DashboardView>
     }
   }
 
-  // ── Analytics Placeholder ──────────────────────────────
+  // ── Analytics Dashboard ────────────────────────────────
   Widget _analyticsView() {
+    final state = context.watch<OnboardingStateNotifier>();
+    final salary = state.monthlySalary ?? 0;
+    final expenses = state.monthlyExpenses ?? 0;
+    final savings = state.currentSavings ?? 0;
+    final goalIds = state.selectedGoalIds;
+    final netMonthly = salary - expenses;
+
+    // Emoji mapping for goal IDs
+    const goalEmojis = {
+      'home': '🏠', 'car': '🚗', 'retirement': '🏖️',
+      'education': '🎓', 'travel': '✈️', 'emergency': '🛡️',
+    };
+
+    // Financial health score (simple heuristic)
+    int healthScore = 50;
+    if (salary > 0) healthScore += 15;
+    if (expenses < salary * 0.7) healthScore += 15;
+    if (savings > salary * 3) healthScore += 10;
+    if (goalIds.isNotEmpty) healthScore += 10;
+    healthScore = healthScore.clamp(0, 100);
+
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Center(
-        child: GlassContainer(
-          padding: const EdgeInsets.all(AppTheme.cardPaddingLarge),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  gradient: AppColors.orangeGradient,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [AppColors.orangeGlow],
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Section 1: Header & Health Score ───────────────
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Varlık Simülasyonu', style: AppTheme.heading),
+                      const SizedBox(height: 4),
+                      Text('Finansal durumunuzun canlı özeti', style: AppTheme.body),
+                    ],
+                  ),
                 ),
-                child: const Icon(Icons.analytics_rounded, color: AppColors.solidWhite, size: 40),
-              ),
-              const SizedBox(height: 24),
-              Text('Finansal Analitikler', style: AppTheme.heading),
-              const SizedBox(height: 12),
-              Text(
-                'Gelişmiş finansal analitikler ve detaylı raporlar yakında burada olacak.',
-                style: AppTheme.body,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Harcama analizi, yatırım performansı ve bütçe takibi gibi araçlar üzerinde çalışıyoruz.',
-                style: AppTheme.caption,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColors.solarOrange.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: AppColors.solarOrange.withValues(alpha: 0.30)),
+                GlassContainer(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  borderRadius: 16,
+                  glowShadows: [AppColors.orangeGlowSubtle],
+                  child: Column(
+                    children: [
+                      Text(
+                        '$healthScore',
+                        style: AppTheme.balanceText.copyWith(
+                          fontSize: 28,
+                          color: AppColors.solarOrange,
+                        ),
+                      ),
+                      Text('/100', style: AppTheme.caption),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Sağlık Skoru',
+                        style: AppTheme.caption.copyWith(fontSize: 10),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.rocket_launch_rounded, color: AppColors.solarOrange, size: 16),
-                  const SizedBox(width: 8),
-                  Text('Yakında', style: AppTheme.bodySm.copyWith(color: AppColors.solarOrange, fontWeight: FontWeight.w600)),
-                ]),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // ── Section 2: Financial Metrics Grid ──────────────
+            GridView.count(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.45,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _metricCard(
+                  icon: Icons.trending_up_rounded,
+                  label: 'Aylık Gelir',
+                  value: _formatTL(salary),
+                  accentColor: AppColors.growthMint,
+                ),
+                _metricCard(
+                  icon: Icons.trending_down_rounded,
+                  label: 'Aylık Gider',
+                  value: _formatTL(expenses),
+                  accentColor: AppColors.crimsonPulse,
+                ),
+                _metricCard(
+                  icon: Icons.savings_rounded,
+                  label: 'Mevcut Birikim',
+                  value: _formatTL(savings),
+                  accentColor: AppColors.solarOrange,
+                ),
+                _goalsCard(goalIds, goalEmojis),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // ── Section 3: 12-Month Projection Chart ──────────
+            GlassContainer(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.solarOrange.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.show_chart_rounded, color: AppColors.solarOrange, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '12 Aylık Birikim Projeksiyonu',
+                              style: AppTheme.bodySm.copyWith(
+                                color: AppColors.snowWhite,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              netMonthly > 0
+                                  ? 'Aylık ${_formatTL(netMonthly)} net tasarruf'
+                                  : 'Henüz veri girilmedi',
+                              style: AppTheme.caption,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 200,
+                    child: _buildProjectionChart(savings, netMonthly),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 24),
+
+            // ── Section 4: Net Savings Summary Badge ─────────
+            GlassContainer(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.orangeGradient,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [AppColors.orangeGlowSubtle],
+                    ),
+                    child: const Icon(Icons.rocket_launch_rounded, color: AppColors.solidWhite, size: 24),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Yıl Sonu Tahmini Birikim',
+                          style: AppTheme.bodySm.copyWith(
+                            color: AppColors.snowWhite,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatTL(savings + (netMonthly * 12)),
+                          style: AppTheme.balanceText.copyWith(fontSize: 24, color: AppColors.solarOrange),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     );
+  }
+
+  // ── Metric Card Builder ───────────────────────────────
+  Widget _metricCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color accentColor,
+  }) {
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: accentColor, size: 20),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: AppTheme.caption),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: AppTheme.subheading.copyWith(fontSize: 18),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Goals Card ───────────────────────────────────────
+  Widget _goalsCard(List<String> goalIds, Map<String, String> emojiMap) {
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.amberFlame.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.flag_rounded, color: AppColors.amberFlame, size: 20),
+          ),
+          const SizedBox(height: 8),
+          Text('Aktif Hedefler', style: AppTheme.caption),
+          const SizedBox(height: 4),
+          goalIds.isEmpty
+              ? Text('Henüz seçilmedi', style: AppTheme.bodySm.copyWith(color: AppColors.stoneGrey))
+              : Flexible(
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: goalIds.map((id) {
+                      final emoji = emojiMap[id] ?? '🎯';
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.solarOrange.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.solarOrange.withValues(alpha: 0.25)),
+                        ),
+                        child: Text(emoji, style: const TextStyle(fontSize: 16)),
+                      );
+                    }).toList(),
+                  ),
+                ),
+        ],
+      ),
+    );
+  }
+
+  // ── Projection Chart ─────────────────────────────────
+  Widget _buildProjectionChart(double initialSavings, double netMonthly) {
+    // Generate 12 data points: month 0 = current savings, months 1–12 compound
+    final spots = List.generate(13, (i) {
+      return FlSpot(i.toDouble(), initialSavings + (netMonthly * i));
+    });
+
+    final maxY = spots.isEmpty ? 100.0 : spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+    final minY = spots.isEmpty ? 0.0 : spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
+    final yRange = (maxY - minY).abs();
+    final effectiveMaxY = maxY + (yRange * 0.15).clamp(1000, double.infinity);
+    final effectiveMinY = (minY - (yRange * 0.05)).clamp(0, double.infinity).toDouble();
+
+    return LineChart(
+      LineChartData(
+        minX: 0,
+        maxX: 12,
+        minY: effectiveMinY,
+        maxY: effectiveMaxY,
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: yRange > 0 ? yRange / 4 : 10000,
+          getDrawingHorizontalLine: (_) => FlLine(
+            color: Colors.white.withValues(alpha: 0.05),
+            strokeWidth: 1,
+          ),
+        ),
+        titlesData: FlTitlesData(
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 48,
+              getTitlesWidget: (value, meta) {
+                if (value == meta.min || value == meta.max) return const SizedBox.shrink();
+                return Text(
+                  _formatCompact(value),
+                  style: AppTheme.caption.copyWith(fontSize: 10),
+                );
+              },
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: 3,
+              getTitlesWidget: (value, _) {
+                final month = value.toInt();
+                if (month == 0) return Text('Bugün', style: AppTheme.caption.copyWith(fontSize: 10));
+                return Text('${month}ay', style: AppTheme.caption.copyWith(fontSize: 10));
+              },
+            ),
+          ),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        ),
+        borderData: FlBorderData(show: false),
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipItems: (spots) => spots.map((spot) {
+              return LineTooltipItem(
+                _formatTL(spot.y),
+                AppTheme.bodySm.copyWith(
+                  color: AppColors.solarOrange,
+                  fontWeight: FontWeight.w600,
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            curveSmoothness: 0.3,
+            color: AppColors.solarOrange,
+            barWidth: 3,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, show, barData, index) => FlDotCirclePainter(
+                radius: spot.x % 3 == 0 ? 4 : 0, // Show dots at quarters
+                color: AppColors.solarOrange,
+                strokeWidth: 2,
+                strokeColor: AppColors.solidWhite,
+              ),
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.solarOrange.withValues(alpha: 0.28),
+                  AppColors.solarOrange.withValues(alpha: 0.0),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  // ── TL Formatter ─────────────────────────────────────
+  String _formatTL(double value) {
+    if (value >= 1000000) {
+      return '${(value / 1000000).toStringAsFixed(1)}M ₺';
+    } else if (value >= 1000) {
+      return '${(value / 1000).toStringAsFixed(value % 1000 == 0 ? 0 : 1)}K ₺';
+    }
+    return '${value.toStringAsFixed(0)} ₺';
+  }
+
+  String _formatCompact(double value) {
+    if (value.abs() >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
+    if (value.abs() >= 1000) return '${(value / 1000).toStringAsFixed(0)}K';
+    return value.toStringAsFixed(0);
   }
 
   // ── Settings Placeholder ───────────────────────────────
