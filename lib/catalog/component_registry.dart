@@ -16,11 +16,14 @@ class OnyxCatalog {
   OnyxCatalog._();
 
   static Catalog buildCatalog({Function(String)? onSubmit}) {
-    return Catalog([
-      GoalSelectionCard.toCatalogItem(onSubmit: onSubmit),
-      DynamicInputField.toCatalogItem(onSubmit: onSubmit),
-      FinancialProjectionChart.toCatalogItem(),
-      AlertActionBadge.toCatalogItem(),
-    ]);
+    return Catalog(
+      [
+        GoalSelectionCard.toCatalogItem(onSubmit: onSubmit),
+        DynamicInputField.toCatalogItem(onSubmit: onSubmit),
+        FinancialProjectionChart.toCatalogItem(),
+        AlertActionBadge.toCatalogItem(),
+      ],
+      catalogId: 'com.onyxfi.catalog',
+    );
   }
 }

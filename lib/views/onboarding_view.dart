@@ -50,21 +50,33 @@ class _OnboardingViewState extends State<OnboardingView> {
 
     _conversation.events.listen((event) {
       if (!mounted) return;
+      debugPrint('[Onboarding] Event: ${event.runtimeType}');
       if (event is ConversationSurfaceAdded) {
+        debugPrint('[Onboarding] ✅ Surface added: ${event.surfaceId}');
         setState(() => _currentSurfaceId = event.surfaceId);
       } else if (event is ConversationSurfaceRemoved) {
+        debugPrint('[Onboarding] Surface removed: ${event.surfaceId}');
         if (_currentSurfaceId == event.surfaceId) {
           setState(() => _currentSurfaceId = null);
         }
       } else if (event is ConversationContentReceived) {
+        debugPrint('[Onboarding] Text received: "${event.text.substring(0, event.text.length.clamp(0, 80))}"');
         setState(() => _currentAiText = event.text);
+      } else if (event is ConversationComponentsUpdated) {
+        debugPrint('[Onboarding] ✅ Components updated on: ${event.surfaceId}');
+        // Re-render the surface if it's the current one
+        if (_currentSurfaceId == event.surfaceId) {
+          setState(() {});
+        }
       } else if (event is ConversationWaiting) {
+        debugPrint('[Onboarding] ⏳ Waiting for AI...');
         setState(() {
           _isLoading = true;
           _currentSurfaceId = null; // Clear surface between steps
           _currentAiText = '';
         });
       } else if (event is ConversationError) {
+        debugPrint('[Onboarding] ❌ Error: ${event.error}');
         setState(() {
           _isLoading = false;
           _currentAiText = 'Bir hata oluştu: ${event.error}';
@@ -86,9 +98,11 @@ class _OnboardingViewState extends State<OnboardingView> {
   Future<void> _handleNextStep([String? userInput]) async {
     if (_isLoading) return;
     final prompt = userInput ?? 
-      'Kullanıcı onboarding sürecini başlattı. Lütfen hedeflerini sormak için '
-      'goal_selection_card componenti döndür.';
+      'Kullanıcı onboarding sürecini başlattı. Lütfen GoalSelectionCard '
+      'widget\'ını iki adımlı A2UI protokolü ile (createSurface + updateComponents) '
+      'render ederek finansal hedeflerini sor.';
       
+    debugPrint('[Onboarding] Sending prompt: "${prompt.substring(0, prompt.length.clamp(0, 80))}"');
     await _conversation.sendRequest(genui.ChatMessage.user(prompt));
   }
 

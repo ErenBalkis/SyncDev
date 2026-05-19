@@ -71,18 +71,28 @@ class _DashboardViewState extends State<DashboardView>
     // Listen to surface rendering and streaming text events
     _conversation.events.listen((event) {
       if (!mounted) return;
+      debugPrint('[Dashboard] Event: ${event.runtimeType}');
       if (event is ConversationSurfaceAdded) {
+        debugPrint('[Dashboard] ✅ Surface added: ${event.surfaceId}');
         setState(() => _history.add(event.surfaceId));
         _scroll();
       } else if (event is ConversationSurfaceRemoved) {
+        debugPrint('[Dashboard] Surface removed: ${event.surfaceId}');
         setState(() => _history.remove(event.surfaceId));
       } else if (event is ConversationContentReceived) {
+        debugPrint('[Dashboard] Text: "${event.text.substring(0, event.text.length.clamp(0, 80))}"');
         setState(() => _currentAiText = event.text);
         _scroll();
+      } else if (event is ConversationComponentsUpdated) {
+        debugPrint('[Dashboard] ✅ Components updated on: ${event.surfaceId}');
+        setState(() {}); // Trigger rebuild to reflect updated components
+        _scroll();
       } else if (event is ConversationWaiting) {
+        debugPrint('[Dashboard] ⏳ Waiting for AI...');
         setState(() => _loading = true);
         _currentAiText = '';
       } else if (event is ConversationError) {
+        debugPrint('[Dashboard] ❌ Error: ${event.error}');
         setState(() {
           _loading = false;
           _history.add(OnyxChatMessage(
@@ -130,8 +140,9 @@ class _DashboardViewState extends State<DashboardView>
     // Send a hidden prompt to trigger the initial onboarding flow
     await _sendToAI(
       'Kullanıcıyı OnyxFi\'ye hoş geldin mesajıyla karşıla ve hemen ardından '
-      'goal_selection bileşenini kullanarak birincil finansal hedeflerini sor. '
-      'Hedefler arasında Ev, Araba, Emeklilik, Eğitim, Seyahat, Acil Fon olsun.',
+      'GoalSelectionCard widget\'ını iki adımlı A2UI protokolü ile '
+      '(createSurface + updateComponents) render ederek birincil finansal '
+      'hedeflerini sor. Hedefler: Ev, Araba, Emeklilik, Eğitim, Seyahat, Acil Fon.',
       hidden: true,
     );
   }
