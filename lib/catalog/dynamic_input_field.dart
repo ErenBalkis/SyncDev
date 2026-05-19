@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:genui/genui.dart';
+import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:onyxfi_frontend/core/constants/colors.dart';
 import 'package:onyxfi_frontend/core/theme/app_theme.dart';
 import 'package:onyxfi_frontend/widgets/glass_container.dart';
@@ -29,6 +31,24 @@ class DynamicInputField extends StatefulWidget {
     this.onChanged,
     this.onSubmit,
   });
+
+  static CatalogItem toCatalogItem({Function(String)? onSubmit}) {
+    return CatalogItem(
+      name: 'DynamicInputField',
+      dataSchema: S.object(
+        properties: {
+          'label': S.string(description: 'Input başlığı'),
+          'hint': S.string(description: 'Placeholder metni'),
+          'suffix': S.string(description: 'Para birimi veya ek, örn TL'),
+          'inputType': S.string(description: 'Veri tipi: number veya text'),
+        },
+      ),
+      widgetBuilder: (itemContext) {
+        final map = itemContext.data as Map<String, dynamic>? ?? {};
+        return DynamicInputField.fromJson(map, onSubmit: onSubmit);
+      },
+    );
+  }
 
   factory DynamicInputField.fromJson(
     Map<String, dynamic> json, {

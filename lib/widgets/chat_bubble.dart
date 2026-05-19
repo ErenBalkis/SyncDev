@@ -12,11 +12,11 @@ import 'package:onyxfi_frontend/widgets/glass_container.dart';
 /// All text is white-based for legibility on dark background.
 /// ──────────────────────────────────────────────────────────
 class ChatBubble extends StatelessWidget {
-  final ChatMessage message;
+  final OnyxChatMessage message;
 
   const ChatBubble({super.key, required this.message});
 
-  bool get _isUser => message.role == MessageRole.user;
+  bool get _isUser => message.role == OnyxMessageRole.user;
 
   @override
   Widget build(BuildContext context) {

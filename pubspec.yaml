@@ -15,6 +15,11 @@ dependencies:
   # AI — Gemini API Integration
   google_generative_ai: ^0.4.6
 
+  # Generative UI SDK (official flutter/genui — labs.flutter.dev)
+  # genui_dartantic is intentionally excluded — it is deprecated/deactivated.
+  genui: ^0.8.0
+  json_schema_builder: ^0.1.3
+
   # Data Visualization
   fl_chart: ^0.70.2
 
@@ -26,6 +31,7 @@ dependencies:
 
   # Typography — Inter font from Google Fonts
   google_fonts: ^6.2.1
+
 
 dev_dependencies:
   flutter_test:

@@ -1,63 +1,33 @@
-/// OnyxFi — Chat Message Model
+/// OnyxFi — Local Chat Message Model
 ///
-/// Represents a single message in the AI chat conversation.
-/// Supports both plain text and GenUI JSON payloads.
+/// Renamed from ChatMessage → OnyxChatMessage to avoid a name collision
+/// with the `ChatMessage` class exported by the official `genui` SDK.
+///
+/// Represents a single message in the UI conversation log.
+/// Only used for user-side text bubbles (AI responses are rendered
+/// as native GenUI `Surface` widgets via `Conversation.sendRequest`).
 library;
 
-enum MessageRole { user, assistant, system }
+enum OnyxMessageRole { user, assistant, system }
 
-class ChatMessage {
+class OnyxChatMessage {
   final String id;
-  final MessageRole role;
+  final OnyxMessageRole role;
   final String content;
   final DateTime timestamp;
 
-  /// Optional structured JSON payload for GenUI rendering.
-  /// When present, the UI should render a dynamic widget
-  /// instead of (or alongside) the text content.
-  final Map<String, dynamic>? genUIPayload;
-
-  const ChatMessage({
+  const OnyxChatMessage({
     required this.id,
     required this.role,
     required this.content,
     required this.timestamp,
-    this.genUIPayload,
   });
 
-  /// Whether this message contains a GenUI component to render.
-  bool get hasGenUI => genUIPayload != null && genUIPayload!.isNotEmpty;
-
-  /// Factory constructor from Gemini GenUI JSON response.
-  /// The response format from GeminiClient.sendAndParseGenUI:
-  /// {"component_type": "...", "message": "...", "data": {...}}
-  factory ChatMessage.fromAIResponse(Map<String, dynamic> json) {
-    final componentType = json['component_type'] as String?;
-    final data = json['data'];
-
-    // Build the registry-compatible payload if it's not text_only
-    Map<String, dynamic>? registryPayload;
-    if (componentType != null && componentType != 'text_only') {
-      registryPayload = {
-        'type': componentType,
-        'data': data is Map<String, dynamic> ? data : {},
-      };
-    }
-
-    return ChatMessage(
+  /// Convenience factory for user messages shown in the chat log.
+  factory OnyxChatMessage.user(String content) {
+    return OnyxChatMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      role: MessageRole.assistant,
-      content: json['message'] as String? ?? '',
-      timestamp: DateTime.now(),
-      genUIPayload: registryPayload,
-    );
-  }
-
-  /// Convenience factory for user messages.
-  factory ChatMessage.user(String content) {
-    return ChatMessage(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      role: MessageRole.user,
+      role: OnyxMessageRole.user,
       content: content,
       timestamp: DateTime.now(),
     );

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:genui/genui.dart';
+import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:onyxfi_frontend/core/constants/colors.dart';
 import 'package:onyxfi_frontend/core/theme/app_theme.dart';
 import 'package:onyxfi_frontend/widgets/glass_container.dart';
@@ -12,6 +14,23 @@ class AlertActionBadge extends StatelessWidget {
   final VoidCallback? onAction;
 
   const AlertActionBadge({super.key, this.severity = 'info', required this.title, required this.message, this.actionLabel, this.onAction});
+
+  static CatalogItem toCatalogItem() {
+    return CatalogItem(
+      name: 'AlertActionBadge',
+      dataSchema: S.object(
+        properties: {
+          'severity': S.string(description: 'info, warning, success, veya danger'),
+          'title': S.string(description: 'Uyarı başlığı'),
+          'message': S.string(description: 'Uyarı mesajı'),
+        },
+      ),
+      widgetBuilder: (itemContext) {
+        final map = itemContext.data as Map<String, dynamic>? ?? {};
+        return AlertActionBadge.fromJson(map);
+      },
+    );
+  }
 
   factory AlertActionBadge.fromJson(Map<String, dynamic> json) {
     return AlertActionBadge(severity: json['severity'] as String? ?? 'info', title: json['title'] as String? ?? 'Bildirim', message: json['message'] as String? ?? '', actionLabel: json['actionLabel'] as String?);

@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:genui/genui.dart';
+import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:onyxfi_frontend/core/constants/colors.dart';
 import 'package:onyxfi_frontend/core/theme/app_theme.dart';
 import 'package:onyxfi_frontend/widgets/glass_container.dart';
@@ -28,6 +30,32 @@ class GoalSelectionCard extends StatefulWidget {
     this.onSelectionChanged,
     this.onSubmit,
   });
+
+  static CatalogItem toCatalogItem({Function(String)? onSubmit}) {
+    return CatalogItem(
+      name: 'GoalSelectionCard',
+      dataSchema: S.object(
+        properties: {
+          'title': S.string(description: 'Kart başlığı'),
+          'subtitle': S.string(description: 'Alt başlık açıklaması'),
+          'goals': S.list(
+            items: S.object(
+              properties: {
+                'id': S.string(description: 'Hedef ID'),
+                'label': S.string(description: 'Hedef adı'),
+                'emoji': S.string(description: 'Emoji'),
+              },
+            ),
+            description: 'Kullanıcının seçebileceği finansal hedefler',
+          ),
+        },
+      ),
+      widgetBuilder: (itemContext) {
+        final map = itemContext.data as Map<String, dynamic>? ?? {};
+        return GoalSelectionCard.fromJson(map, onSubmit: onSubmit);
+      },
+    );
+  }
 
   factory GoalSelectionCard.fromJson(
     Map<String, dynamic> json, {

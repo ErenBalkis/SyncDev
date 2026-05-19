@@ -1,24 +1,24 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:genui/genui.dart';
+import 'package:google_generative_ai/google_generative_ai.dart' as gai;
 
 /// ──────────────────────────────────────────────────────────
-/// OnyxFi — Gemini API Client (GenUI Orchestrator)
+/// OnyxFi — Gemini ↔ GenUI Bridge Client
 /// ──────────────────────────────────────────────────────────
-/// Singleton client that manages the Gemini API connection.
+/// Singleton that owns the GoogleGenerativeAI model instance
+/// and provides a factory method to build an A2uiTransportAdapter
+/// that pipes Gemini streaming chunks into the genui framework.
 ///
-/// • Model: gemini-3-flash-preview
-/// • System Instruction: Injected at init — forces the model
-///   to always return strict GenUI JSON payloads.
-/// • Response format: application/json
-/// • All responses are parsed and validated before reaching
-///   the ComponentRegistry to prevent runtime crashes.
+/// The SDK interaction cycle:
+///   conversation.sendRequest(ChatMessage.user(text))
+///     → A2uiTransportAdapter.onSend
+///       → _streamFromGemini → addChunk(chunk) per token
+///         → A2uiParserTransformer → SurfaceController → Surface widget
 /// ──────────────────────────────────────────────────────────
 
 class GeminiClient {
-  late final GenerativeModel _model;
-  late final ChatSession _chat;
+  late gai.GenerativeModel _model;
   bool _isInitialized = false;
 
   // ── Singleton ──────────────────────────────────────────
@@ -26,212 +26,156 @@ class GeminiClient {
   factory GeminiClient() => _instance;
   GeminiClient._internal();
 
-  /// Whether the client has been successfully initialized.
   bool get isInitialized => _isInitialized;
 
-  // ── System Instruction ─────────────────────────────────
-  // This is the core prompt that turns Gemini into our
-  // GenUI orchestrator. It MUST return valid JSON only.
+  // ── A2UI System Instruction ────────────────────────────
+  // The genui SDK uses the A2UI protocol: the model emits structured
+  // A2UI JSON mixed with plain text. The system instruction must tell
+  // the model:
+  //   1. That it operates in A2UI mode
+  //   2. Which named widgets are in the OnyxCatalog
+  //   3. When to render each widget vs. plain conversational text
+  //
+  // Plain text is streamed as-is (shown as text bubbles).
+  // A2UI blocks create/update Surface widgets reactively.
   static const String _systemInstruction = '''
-You are OnyxFi, an expert AI Personal Finance Advisor and UI Orchestrator. 
-You do not interact with users using plain conversational text alone. Instead, you drive a Generative UI (GenUI) Flutter application. 
-Every response you generate MUST be a valid, minified JSON object. Do not include markdown formatting (like ```json), do not include introductory or concluding text. ONLY output the JSON object.
+You are OnyxFi, an expert AI Personal Finance Advisor operating in A2UI (Agent-to-UI) mode inside a Flutter application powered by the GenUI SDK.
 
-Your goal is to guide the user through their financial journey by triggering the correct UI components in the Flutter frontend.
+You drive a conversational financial planning experience. You have two output modes:
 
-You have access to the following UI components in the app's catalog. Always choose the most appropriate one based on the conversation context:
+1. PLAIN TEXT — Use this for greetings, short conversational responses, confirmations, and simple financial advice. Just write natural language.
 
-1. "text_only": Used for basic conversational replies, greetings, or simple advice.
-2. "goal_selection": Used ONLY when asking the user about their primary financial goals (e.g., House, Car, Retirement).
-3. "dynamic_input": Used when you need the user to input a specific number (e.g., "What is your monthly salary?" or "How much do you pay for rent?").
-4. "projection_chart": Used when the user asks for a visual projection, forecast, or breakdown of their budget/savings over time.
-5. "alert_badge": Used when you detect a critical financial risk (e.g., "Warning: High credit card debt") or an actionable opportunity.
+2. A2UI WIDGET SURFACES — Use this to render interactive UI components. When you need to collect structured input or display visual data, you MUST emit an A2UI message using the exact v0.9 JSON format below.
 
-REQUIRED JSON RESPONSE STRUCTURE:
+CRITICAL A2UI SCHEMA RULE: When generating UI components, you MUST strictly adhere to this exact JSON structure. Do NOT use the key 'type' or 'widget' for the component name. You MUST use the key 'component'.
+```json
 {
-  "component_type": "<Choose ONE from the 5 options above>",
-  "message": "<Your conversational response or instruction to the user>",
-  "data": <Specific data required for the chosen component, or null if not needed>
+  "version": "v0.9",
+  "updateComponents": {
+    "surfaceId": "root",
+    "components": [
+      {
+        "id": "root",
+        "component": "<WIDGET_NAME>",
+        "properties": {
+          <WIDGET_PROPERTIES>
+        }
+      }
+    ]
+  }
 }
+```
 
-DATA STRUCTURE EXAMPLES:
-- For "goal_selection": "data": {"options": ["Buy a House", "Retirement", "Buy a Car", "Travel", "Emergency Fund"]}
-- For "dynamic_input": "data": {"input_type": "number", "placeholder": "e.g., 5000", "currency": "USD"}
-- For "projection_chart": "data": {"chart_type": "line", "x_axis": ["Jan", "Feb", "Mar"], "y_axis_label": "Balance", "series": [{"name": "Savings", "values": [1000, 2000, 3500]}]}
-- For "text_only": "data": null
+AVAILABLE WIDGETS IN THE OnyxCatalog (<WIDGET_NAME>):
+
+a) GoalSelectionCard — Show this when asking the user to pick their financial goals.
+   <WIDGET_PROPERTIES>: "title" (string), "subtitle" (string), "goals" (array of {"id": string, "label": string, "emoji": string}).
+   Example goals: [{"id":"home","label":"Ev","emoji":"🏠"},{"id":"car","label":"Araba","emoji":"🚗"},{"id":"emergency","label":"Acil Fon","emoji":"🛡️"}]
+
+b) DynamicInputField — Show this when asking the user for a specific numeric or text value.
+   <WIDGET_PROPERTIES>: "label" (string), "hint" (string), "suffix" (string, e.g. "TL"), "inputType" ("number" or "text").
+
+c) FinancialProjectionChart — Show this when displaying a savings/investment projection over time.
+   <WIDGET_PROPERTIES>: "title" (string), "points" (array of {"x": number, "y": number}), "labels" (array of strings).
+
+d) AlertActionBadge — Show this for financial warnings, risks, or actionable opportunities.
+   <WIDGET_PROPERTIES>: "severity" ("info"|"warning"|"success"|"danger"), "title" (string), "message" (string).
+
+BEHAVIOR RULES:
+- Always greet the user in Turkish with a warm, professional tone.
+- Start by rendering a GoalSelectionCard.
+- Mix plain text greetings/confirmations freely with widget surfaces.
+- Do NOT output raw component JSON without the "version": "v0.9" and "updateComponents" wrapper!
 ''';
 
   // ── Initialization ─────────────────────────────────────
 
-  /// Initializes the Gemini model with API key from .env,
-  /// injects the System Instruction, and starts a chat session.
-  ///
-  /// Must be called once before any [sendMessage] calls.
-  /// Throws an [Exception] if the API key is missing.
+  /// Initializes the Gemini model with API key from .env.
+  /// Must be called once in main() before any transport adapter is built.
   Future<void> initialize() async {
     if (_isInitialized) return;
 
     final apiKey = dotenv.env['GEMINI_API_KEY'];
     if (apiKey == null || apiKey.isEmpty || apiKey == 'YOUR_GEMINI_API_KEY') {
-      throw Exception(
-        '[GeminiClient] GEMINI_API_KEY is not set. '
-        'Please add your key to the .env file.',
-      );
+      throw Exception('[GeminiClient] GEMINI_API_KEY is not set in .env file.');
     }
 
-    _model = GenerativeModel(
+    _model = gai.GenerativeModel(
       model: 'gemini-3-flash-preview',
       apiKey: apiKey,
-
-      // System Instruction — injected as Content so the model
-      // always behaves as our GenUI orchestrator.
-      systemInstruction: Content.system(_systemInstruction),
-
-      generationConfig: GenerationConfig(
+      // System instruction injected at model level — survives all chat sessions.
+      systemInstruction: gai.Content.system(_systemInstruction),
+      generationConfig: gai.GenerationConfig(
         temperature: 0.7,
         topP: 0.95,
         topK: 40,
         maxOutputTokens: 8192,
-        // Force JSON-only output — no markdown wrapping.
-        responseMimeType: 'application/json',
+        // A2UI protocol uses plain text + structured markers — NOT application/json.
+        // Removing responseMimeType so the model can freely mix text and A2UI blocks.
       ),
-
-      // NOTE on Thinking Config:
-      // The Python SDK supports `thinking_config: ThinkingConfig(thinking_level="HIGH")`
-      // but the current Dart `google_generative_ai` package (v0.4.x) does not yet
-      // expose a `thinkingConfig` parameter in GenerativeModel or GenerationConfig.
-      // When the Dart SDK adds support, enable it here:
-      // thinkingConfig: ThinkingConfig(thinkingLevel: ThinkingLevel.high),
     );
 
-    // Start a persistent chat session to maintain conversation context.
-    _chat = _model.startChat();
     _isInitialized = true;
-
-    debugPrint('[GeminiClient] ✅ Initialized with gemini-3-flash-preview');
+    debugPrint('[GeminiClient] ✅ Initialized — A2UI mode active');
   }
 
-  // ── Core Messaging ─────────────────────────────────────
+  // ── Transport Adapter Factory ──────────────────────────
 
-  /// Sends a raw user message and returns the model's text response.
+  /// Creates an [A2uiTransportAdapter] wired to this Gemini model.
   ///
-  /// The response should always be a JSON string thanks to the
-  /// System Instruction + `responseMimeType: 'application/json'`.
-  Future<String> sendMessage(String message) async {
+  /// The adapter's [onSend] callback:
+  ///   1. Receives the full conversation history as a [ChatMessage]
+  ///   2. Calls Gemini's streaming API
+  ///   3. Pipes each text chunk to [A2uiTransportAdapter.addChunk]
+  ///
+  /// This is the correct bridge pattern per the genui 0.8.x docs.
+  /// No dartantic middleware is needed.
+  A2uiTransportAdapter buildTransportAdapter() {
     _ensureInitialized();
 
-    final response = await _chat.sendMessage(Content.text(message));
-    final text = response.text;
+    late A2uiTransportAdapter adapter;
 
-    if (text == null || text.isEmpty) {
-      debugPrint('[GeminiClient] ⚠️ Empty response from model.');
-      return '{"component_type": "text_only", "message": "Bir hata oluştu, lütfen tekrar deneyin.", "data": null}';
-    }
+    adapter = A2uiTransportAdapter(
+      onSend: (ChatMessage message) async {
+        try {
+          // Build a fresh chat session for each Conversation instance.
+          // The genui framework manages history and passes the full
+          // conversation as ChatMessage.history — we send only the last turn.
+          final userText = message.text;
+          if (userText.isEmpty) return;
 
-    return text;
-  }
-
-  // ── GenUI JSON Parsing ─────────────────────────────────
-
-  /// Sends a message and parses the JSON response into a
-  /// structured Map ready for [ComponentRegistry.build()].
-  ///
-  /// Returns a fallback "text_only" payload if parsing fails,
-  /// ensuring the UI never crashes during the hackathon demo.
-  Future<Map<String, dynamic>> sendAndParseGenUI(String message) async {
-    try {
-      final responseText = await sendMessage(message);
-      final decoded = jsonDecode(responseText);
-
-      if (decoded is Map<String, dynamic>) {
-        // Validate that the required keys exist.
-        if (!decoded.containsKey('component_type')) {
-          debugPrint('[GeminiClient] ⚠️ Missing "component_type" in response.');
-          return _fallbackPayload(
-            decoded['message'] as String? ?? responseText,
+          debugPrint(
+            '[GeminiClient] → Sending: "${userText.substring(0, userText.length.clamp(0, 80))}…"',
           );
+
+          final stream = _model.generateContentStream([
+            gai.Content.text(userText),
+          ]);
+
+          await for (final chunk in stream) {
+            final chunkText = chunk.text;
+            if (chunkText != null && chunkText.isNotEmpty) {
+              adapter.addChunk(chunkText);
+            }
+          }
+        } catch (e) {
+          debugPrint('[GeminiClient] ❌ Stream error: $e');
+          // Pipe a safe fallback text so the UI doesn't hang.
+          adapter.addChunk('Sistemde anlık bir yoğunluk var. Lütfen 1 dakika bekleyip tekrar deneyin.');
         }
-        return decoded;
-      }
+      },
+    );
 
-      debugPrint('[GeminiClient] ⚠️ Response is not a JSON object.');
-      return _fallbackPayload(responseText);
-    } catch (e) {
-      debugPrint('[GeminiClient] ❌ Parse error: $e');
-      return _fallbackPayload('Yanıt işlenirken bir hata oluştu.');
-    }
+    return adapter;
   }
 
-  /// Extracts the `component_type` from a parsed GenUI payload.
-  /// Maps it to the catalog type expected by [ComponentRegistry].
-  ///
-  /// Mapping:
-  /// - "goal_selection" → "goal_selection"
-  /// - "dynamic_input"  → "dynamic_input"
-  /// - "projection_chart" → "projection_chart"
-  /// - "alert_badge"    → "alert_badge"
-  /// - "text_only"      → null (render as plain chat bubble)
-  static String? extractComponentType(Map<String, dynamic> payload) {
-    final type = payload['component_type'] as String?;
-    if (type == null || type == 'text_only') return null;
-    return type;
-  }
+  // ── Private ────────────────────────────────────────────
 
-  /// Extracts the conversational message text from a GenUI payload.
-  static String extractMessage(Map<String, dynamic> payload) {
-    return payload['message'] as String? ?? '';
-  }
-
-  /// Extracts the component data from a GenUI payload.
-  /// Returns null if the component is "text_only".
-  static Map<String, dynamic>? extractData(Map<String, dynamic> payload) {
-    final data = payload['data'];
-    if (data is Map<String, dynamic>) return data;
-    return null;
-  }
-
-  /// Convenience method: Converts a GenUI payload into the format
-  /// expected by ComponentRegistry ({"type": ..., "data": ...}).
-  static Map<String, dynamic>? toRegistryFormat(
-    Map<String, dynamic> payload,
-  ) {
-    final componentType = extractComponentType(payload);
-    if (componentType == null) return null; // text_only, no widget needed.
-
-    return {
-      'type': componentType,
-      'data': extractData(payload) ?? {},
-    };
-  }
-
-  // ── Chat Session Management ────────────────────────────
-
-  /// Resets the chat session, clearing all conversation history.
-  /// Useful when the user restarts the onboarding flow.
-  void resetChat() {
-    _ensureInitialized();
-    _chat = _model.startChat();
-    debugPrint('[GeminiClient] 🔄 Chat session reset.');
-  }
-
-  // ── Private Helpers ────────────────────────────────────
-
-  /// Ensures the client is initialized before any API call.
   void _ensureInitialized() {
     if (!_isInitialized) {
       throw StateError(
         '[GeminiClient] Not initialized. Call initialize() first.',
       );
     }
-  }
-
-  /// Creates a safe fallback payload so the UI always has
-  /// something to render, even when the API response is malformed.
-  static Map<String, dynamic> _fallbackPayload(String message) {
-    return {
-      'component_type': 'text_only',
-      'message': message,
-      'data': null,
-    };
   }
 }

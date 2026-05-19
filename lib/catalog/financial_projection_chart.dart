@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:genui/genui.dart';
+import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:onyxfi_frontend/core/constants/colors.dart';
 import 'package:onyxfi_frontend/core/theme/app_theme.dart';
 import 'package:onyxfi_frontend/widgets/glass_container.dart';
@@ -19,6 +21,34 @@ class FinancialProjectionChart extends StatelessWidget {
     required this.spots,
     this.labels = const [],
   });
+
+  static CatalogItem toCatalogItem() {
+    return CatalogItem(
+      name: 'FinancialProjectionChart',
+      dataSchema: S.object(
+        properties: {
+          'title': S.string(description: 'Grafik başlığı'),
+          'points': S.list(
+            items: S.object(
+              properties: {
+                'x': S.number(description: 'X ekseni değeri'),
+                'y': S.number(description: 'Y ekseni değeri'),
+              },
+            ),
+            description: 'Grafik veri noktaları',
+          ),
+          'labels': S.list(
+            items: S.string(),
+            description: 'X ekseni etiketleri',
+          ),
+        },
+      ),
+      widgetBuilder: (itemContext) {
+        final map = itemContext.data as Map<String, dynamic>? ?? {};
+        return FinancialProjectionChart.fromJson(map);
+      },
+    );
+  }
 
   factory FinancialProjectionChart.fromJson(Map<String, dynamic> json) {
     final points = json['points'] as List<dynamic>? ?? [];
