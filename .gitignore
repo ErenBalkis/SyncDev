@@ -1,21 +1,18 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
+# Sanal ortam
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
 .idea/
 
 # The .vscode folder contains launch configuration and tasks you configure in
@@ -44,6 +41,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# API KEY
+# Çevresel Değişkenler ve Güvenlik (API Key vb.)
 .env
-.env.local
+.env*
