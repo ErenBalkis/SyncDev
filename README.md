@@ -107,17 +107,17 @@ Every interaction feels premium. The "Ambient Transparent Glass" design system u
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="assets/screenshots/enterance.png" width="28%" />
+  <img src="assets/screenshots/enterance.png" width="50%" />
 </p>
 
 <p align="center">
-  <img src="assets/screenshots/onboarding.png" width="28%" />
-  <img src="assets/screenshots/onoarding-2.png" width="28%" />
+  <img src="assets/screenshots/onboarding.png" width="45%" />
+  <img src="assets/screenshots/onoarding-2.png" width="45%" />
 </p>
 
 <p align="center">
-  <img src="assets/screenshots/dashboard.png" width="28%" />
-  <img src="assets/screenshots/ayarlar.png" width="28%" />
+  <img src="assets/screenshots/dashboard.png" width="45%" />
+  <img src="assets/screenshots/ayarlar.png" width="45%" />
 </p>
 
 ---
