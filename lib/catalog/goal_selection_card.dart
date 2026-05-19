@@ -331,7 +331,8 @@ class _GoalChipState extends State<_GoalChip>
               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
               child: Container(
                 width: 100,
-                height: 110,
+                height: 130,
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   // Solar Orange fill when selected, transparent glass when not
                   color: sel
@@ -359,13 +360,17 @@ class _GoalChipState extends State<_GoalChip>
                   children: [
                     Text(widget.goal.emoji, style: const TextStyle(fontSize: 32)),
                     const SizedBox(height: 8),
-                    Text(
-                      widget.goal.label,
-                      style: AppTheme.bodySm.copyWith(
-                        color: sel ? AppColors.solarOrange : AppColors.silverMist,
-                        fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
+                    Flexible(
+                      child: Text(
+                        widget.goal.label,
+                        style: AppTheme.bodySm.copyWith(
+                          color: sel ? AppColors.solarOrange : AppColors.silverMist,
+                          fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
+                        ),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
                       ),
-                      textAlign: TextAlign.center,
                     ),
                     AnimatedOpacity(
                       opacity: sel ? 1.0 : 0.0,

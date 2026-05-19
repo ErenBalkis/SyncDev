@@ -255,8 +255,8 @@ class _DashboardViewState extends State<DashboardView>
           // ── Layer 3: Glass UI ──────────
           SafeArea(
             child: wide
-                ? Row(children: [_sidebar(), Expanded(child: _main())])
-                : Column(children: [Expanded(child: _main()), _bottomNav()]),
+                ? Row(children: [_sidebar(), Expanded(child: _currentView())])
+                : Column(children: [Expanded(child: _currentView()), _bottomNav()]),
           ),
         ],
       ),
@@ -366,6 +366,193 @@ class _DashboardViewState extends State<DashboardView>
             icon: Icon(icons[i], color: _navIdx == i ? AppColors.solarOrange : AppColors.stoneGrey),
           ),
         ),
+      ),
+    );
+  }
+
+  // ── View Router ────────────────────────────────────────
+  Widget _currentView() {
+    switch (_navIdx) {
+      case 1:
+        return _analyticsView();
+      case 2:
+        return _settingsView();
+      default:
+        return _main();
+    }
+  }
+
+  // ── Analytics Placeholder ──────────────────────────────
+  Widget _analyticsView() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Center(
+        child: GlassContainer(
+          padding: const EdgeInsets.all(AppTheme.cardPaddingLarge),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: AppColors.orangeGradient,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [AppColors.orangeGlow],
+                ),
+                child: const Icon(Icons.analytics_rounded, color: AppColors.solidWhite, size: 40),
+              ),
+              const SizedBox(height: 24),
+              Text('Finansal Analitikler', style: AppTheme.heading),
+              const SizedBox(height: 12),
+              Text(
+                'Gelişmiş finansal analitikler ve detaylı raporlar yakında burada olacak.',
+                style: AppTheme.body,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Harcama analizi, yatırım performansı ve bütçe takibi gibi araçlar üzerinde çalışıyoruz.',
+                style: AppTheme.caption,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.solarOrange.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: AppColors.solarOrange.withValues(alpha: 0.30)),
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.rocket_launch_rounded, color: AppColors.solarOrange, size: 16),
+                  const SizedBox(width: 8),
+                  Text('Yakında', style: AppTheme.bodySm.copyWith(color: AppColors.solarOrange, fontWeight: FontWeight.w600)),
+                ]),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Settings Placeholder ───────────────────────────────
+  Widget _settingsView() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Ayarlar', style: AppTheme.heading),
+          const SizedBox(height: 4),
+          Text('Uygulama tercihlerinizi yönetin', style: AppTheme.body),
+          const SizedBox(height: 24),
+          // Profile Card
+          GlassContainer(
+            padding: const EdgeInsets.all(20),
+            child: Row(children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: AppColors.orangeGradient,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [AppColors.orangeGlowSubtle],
+                ),
+                child: const Icon(Icons.person_rounded, color: AppColors.solidWhite, size: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Kullanıcı Profili', style: AppTheme.subheading),
+                    const SizedBox(height: 4),
+                    Text('Kişisel bilgilerinizi düzenleyin', style: AppTheme.caption),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: AppColors.stoneGrey, size: 24),
+            ]),
+          ),
+          const SizedBox(height: 12),
+          // Theme Toggle
+          GlassContainer(
+            padding: const EdgeInsets.all(20),
+            child: Row(children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.solarOrange.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.dark_mode_rounded, color: AppColors.solarOrange, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(child: Text('Koyu Tema', style: AppTheme.bodySm.copyWith(color: AppColors.snowWhite))),
+              Switch(
+                value: true,
+                onChanged: (_) {},
+                activeThumbColor: AppColors.solarOrange,
+                activeTrackColor: AppColors.solarOrange.withValues(alpha: 0.30),
+              ),
+            ]),
+          ),
+          const SizedBox(height: 12),
+          // Notifications Toggle
+          GlassContainer(
+            padding: const EdgeInsets.all(20),
+            child: Row(children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.solarOrange.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.notifications_rounded, color: AppColors.solarOrange, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(child: Text('Bildirimler', style: AppTheme.bodySm.copyWith(color: AppColors.snowWhite))),
+              Switch(
+                value: true,
+                onChanged: (_) {},
+                activeThumbColor: AppColors.solarOrange,
+                activeTrackColor: AppColors.solarOrange.withValues(alpha: 0.30),
+              ),
+            ]),
+          ),
+          const SizedBox(height: 12),
+          // About
+          GlassContainer(
+            padding: const EdgeInsets.all(20),
+            child: Row(children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.solarOrange.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.info_outline_rounded, color: AppColors.solarOrange, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Hakkında', style: AppTheme.bodySm.copyWith(color: AppColors.snowWhite)),
+                    const SizedBox(height: 2),
+                    Text('OnyxFi v1.0.0 — Hackathon MVP', style: AppTheme.caption),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: AppColors.stoneGrey, size: 24),
+            ]),
+          ),
+        ],
       ),
     );
   }
