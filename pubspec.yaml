@@ -29,6 +29,12 @@ dependencies:
   # State Management
   provider: ^6.1.2
 
+  # Authentication — Supabase Flutter SDK
+  supabase_flutter: ^2.10.0
+
+  # HTTP Client — FastAPI Backend Bridge
+  http: ^1.4.0
+
   # Typography — Inter font from Google Fonts
   google_fonts: ^6.2.1
 

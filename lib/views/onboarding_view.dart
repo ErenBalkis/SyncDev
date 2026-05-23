@@ -7,7 +7,10 @@ import 'package:onyxfi_frontend/core/constants/colors.dart';
 import 'package:onyxfi_frontend/core/theme/app_theme.dart';
 import 'package:onyxfi_frontend/widgets/glass_container.dart';
 import 'package:onyxfi_frontend/core/network/gemini_client.dart';
+import 'package:onyxfi_frontend/core/network/api_client.dart';
 import 'package:onyxfi_frontend/catalog/component_registry.dart';
+import 'package:onyxfi_frontend/models/auth_state.dart';
+import 'package:onyxfi_frontend/models/onboarding_state.dart';
 
 /// ──────────────────────────────────────────────────────────
 /// OnyxFi — Onboarding View (Ambient Transparent Glass)
@@ -104,6 +107,68 @@ class _OnboardingViewState extends State<OnboardingView> {
       
     debugPrint('[Onboarding] Sending prompt: "${prompt.substring(0, prompt.length.clamp(0, 80))}"');
     await _conversation.sendRequest(genui.ChatMessage.user(prompt));
+  }
+
+  /// Sends onboarding data + auth UUID to FastAPI backend,
+  /// then navigates to the dashboard.
+  Future<void> _completeOnboarding() async {
+    final auth = context.read<AuthStateNotifier>();
+    final onboarding = context.read<OnboardingStateNotifier>();
+
+    // Only attempt API call if we have an authenticated user
+    if (auth.userId != null) {
+      try {
+        await ApiClient().createProfile(
+          userId: auth.userId!,
+          monthlyIncome: onboarding.monthlySalary ?? 0,
+          currentSavings: onboarding.currentSavings ?? 0,
+          monthlyExpenses: onboarding.monthlyExpenses ?? 0,
+        );
+        debugPrint('[Onboarding] ✅ Profile created via FastAPI.');
+      } on ApiException catch (e) {
+        debugPrint('[Onboarding] ❌ Profile creation failed: ${e.message}');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                e.message,
+                style: AppTheme.bodySm.copyWith(color: AppColors.snowWhite),
+              ),
+              backgroundColor: AppColors.deepSlate,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('[Onboarding] ❌ Unexpected error: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Profil kaydedilemedi. İnternet bağlantınızı kontrol edin.',
+                style: AppTheme.bodySm.copyWith(color: AppColors.snowWhite),
+              ),
+              backgroundColor: AppColors.deepSlate,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+      }
+    } else {
+      debugPrint('[Onboarding] ⚠️ No authenticated user — skipping profile creation.');
+    }
+
+    // Navigate to dashboard regardless of API result
+    if (mounted) {
+      context.read<AppState>().completeOnboarding();
+      Navigator.pushReplacementNamed(context, '/dashboard');
+    }
   }
 
   @override
@@ -209,7 +274,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   OutlinedButton(
-                                    onPressed: () => Navigator.pushReplacementNamed(context, '/dashboard'),
+                                    onPressed: () => _completeOnboarding(),
                                     child: const Text('Atla'),
                                   ),
                                   ElevatedButton(
