@@ -6,7 +6,6 @@ import 'package:onyxfi_frontend/core/theme/app_theme.dart';
 import 'package:onyxfi_frontend/views/auth_view.dart';
 import 'package:onyxfi_frontend/views/onboarding_view.dart';
 import 'package:onyxfi_frontend/views/dashboard_view.dart';
-import 'package:onyxfi_frontend/core/network/gemini_client.dart';
 import 'package:onyxfi_frontend/models/onboarding_state.dart';
 import 'package:onyxfi_frontend/models/auth_state.dart';
 
@@ -14,7 +13,7 @@ import 'package:onyxfi_frontend/models/auth_state.dart';
 /// OnyxFi — Agentic Personal Finance & Wealth Simulator
 /// ──────────────────────────────────────────────────────────
 /// Entry point. Loads environment variables, initializes
-/// Supabase and Gemini, registers Provider state management,
+/// Supabase, registers Provider state management,
 /// and applies the Midnight Ledger dark theme.
 /// ──────────────────────────────────────────────────────────
 
@@ -40,12 +39,6 @@ Future<void> main() async {
     }
   } else {
     debugPrint('[Main] ⚠️ Supabase credentials not set in .env — auth will not work.');
-  }
-
-  try {
-    await GeminiClient().initialize();
-  } catch (e) {
-    debugPrint('Gemini initialization failed: $e');
   }
 
   runApp(

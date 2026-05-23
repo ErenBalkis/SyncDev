@@ -19,7 +19,7 @@ load_dotenv()
 
 # Ortam değişkenlerini oku
 SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
-SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
+SUPABASE_KEY: str = os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY", "")
 
 # Değerlerin varlığını kontrol et — eksikse anlamlı hata ver
 if not SUPABASE_URL or not SUPABASE_KEY:

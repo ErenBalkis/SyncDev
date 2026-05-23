@@ -113,6 +113,19 @@ class ChatRequest(BaseModel):
         description="Kullanıcının sorusu / mesajı (boş olamaz)",
     )
 
+
+class StreamChatRequest(BaseModel):
+    """Flutter'dan backend'e gelen streaming sohbet isteği.
+    POST /chat/stream endpoint'i tarafından kullanılır.
+    Yanıt SSE (Server-Sent Events) formatında döner."""
+    user_id: UUID = Field(..., description="Etkileşimin ait olduğu kullanıcı UUID'si")
+    user_message: str = Field(
+        ...,
+        min_length=1,
+        description="Kullanıcının sorusu / mesajı (boş olamaz)",
+    )
+
+
 # 2. Swagger ve Flutter'a Dönecek Cevap (Çıktı)
 class ChatResponse(BaseModel):
     """Veritabanından dönen sohbet etkileşimi ve GenUI yapısı."""
