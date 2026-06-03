@@ -1,6 +1,3 @@
-<p align="center">
-  <img src="assets/images/onyxfi_banner.png" alt="OnyxFi Banner" width="100%" />
-</p>
 
 <h1 align="center">🔶 OnyxFi</h1>
 <h3 align="center"><em>The Future of Agentic Personal Finance</em></h3>
@@ -252,8 +249,8 @@ ClipRRect (border-radius: 20px)
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/ErenBalkis/SyncDev.git
-cd SyncDev
+git clone https://github.com/ErenBalkis/OnyxFi.git
+cd OnyxFi
 ```
 
 ### 2. Configure Environment Variables
@@ -300,7 +297,7 @@ uvicorn main:app --reload --port 8000
 ## 📁 Project Structure
 
 ```
-onyxfi_frontend/
+onyxfi/
 ├── lib/
 │   ├── main.dart                          # App entry point & Provider setup
 │   ├── core/
